@@ -3,5 +3,152 @@ html(lang="ja")
   head
     include includes/head
     title Document
+    script(src="/socket.io/socket.io.js")
+    script.
+      var socket = io();
+      socket.on('connect', function() {
+        socket.emit('start');
+      });
+      socket.on('status', function(data) {
+        if(!data.isConnected) {
+          document.querySelectorAll('button').forEach(function(button) {
+            button.disabled = true;
+          });
+          document.querySelector('#connect').disabled = false;
+        } else {
+          document.querySelectorAll('button').forEach(function(button) {
+            button.disabled = false;
+          document.querySelector('#connect').disabled = true;
+          });
+
+        }
+        console.log(data)
+        document.querySelector('#status').innerHTML = `X: ${data.position.x} Y: ${data.position.y} Z: ${data.position.z} <span id="running" style="color: red;">実行中</span>`;
+        document.querySelector('#running').style.display = data.isRunning ? 'block' : 'none';
+      });
+      
+      function moveX(move) {
+        socket.emit('move', { axis: 'x', move });
+      }
+      function moveY(move) {
+        socket.emit('move', { axis: 'y', move });
+      }
+      function moveZ(move) {
+        socket.emit('move', { axis: 'z', move });
+      }
+      function moveTo(x, y, z) {
+        socket.emit('moveTo', { x, y, z });
+      }
+
+      function cut() {
+        socket.emit('cut');
+      }
+
+      function connect() {
+        socket.emit('connectPrinter');
+      }
+    style.
+      body {
+        margin: 16px;
+      }
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(9, 60px);
+      }
+
   body
     include includes/header
+    h3#status Status: <span id="running" style="color: red;">実行中</span>
+    button(onclick="connect()" id="connect") Connect
+    
+    div.control-grid
+      div
+      div
+      div
+      button(onclick="moveY(10)") Y+<br>10
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(10)") Z+<br>10
+      div
+      div
+      div
+      button(onclick="moveY(1)") Y+<br>1
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(1)") Z+<br>1
+      div
+      div
+      div
+      button(onclick="moveY(0.1)") Y+<br>0.1
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(0.1)") Z+<br>0.1
+      button(onclick="moveX(-10)") X-<br>10
+      button(onclick="moveX(-1)") X-<br>1
+      button(onclick="moveX(-0.1)") X-<br>0.1
+      button(onclick="moveTo(235/2, 235/2, 10)") Center
+      button(onclick="moveX(0.1)") X+<br>0.1
+      button(onclick="moveX(1)") X+<br>1
+      button(onclick="moveX(10)") X+<br>10
+      div
+      div
+      div
+      div
+      div
+      button(onclick="moveY(-0.1)") Y-<br>0.1
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(-0.1)") Z-<br>0.1
+      div
+      div
+      div
+      button(onclick="moveY(-1)") Y-<br>1
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(-1)") Z-<br>1
+      button(onclick="moveTo(0, 0, 10)") X:0<br>Y:0
+      div
+      div
+      button(onclick="moveY(-10)") Y-<br>10
+      div
+      div
+      div
+      div
+      button(onclick="moveZ(-10)") Z-<br>10
+
+    hr
+
+    h2 Cut
+    label(for="name") File
+    input(type="file" id="file")
+    br
+    label(for="speed") Speed
+    input(type="number" value="20" id="speed")
+    br
+    select(id="direction")
+      option(value="width") Width
+      option(value="height") Height
+    br
+    label(for="size") Size
+    input(type="number" value="10" id="size")
+    | mm
+
+    label(for="speed") Travel Z
+    input(type="number" value="2" id="speed")
+    br
+
+    label(for="speed") Cutting Z
+    input(type="number" value="0.5" id="speed")
+    br
+
+    button(onclick="cut()") Cut
